@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { History, LayoutDashboard, Send } from 'lucide-react'
+import { FlaskConical, FolderOpen, GitCompareArrows, History, LayoutDashboard, Send } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Sidebar, type NavItem } from '@/components/Sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,9 @@ import { useAuth } from '@/hooks/useAuth'
 const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/playground', label: 'API Playground', icon: Send },
+  { to: '/collections', label: 'Collections', icon: FolderOpen },
+  { to: '/suites', label: 'Test Suites', icon: FlaskConical },
+  { to: '/diff', label: 'Response Diff', icon: GitCompareArrows },
   { to: '/history', label: 'Request History', icon: History },
 ]
 

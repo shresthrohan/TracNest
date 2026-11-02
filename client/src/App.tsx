@@ -9,6 +9,9 @@ import Register from '@/pages/Register'
 import Dashboard from '@/pages/Dashboard'
 import Playground from '@/pages/Playground'
 import History from '@/pages/History'
+import Collections from '@/pages/Collections'
+import TestSuites from '@/pages/TestSuites'
+import ResponseDiff from '@/pages/ResponseDiff'
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
 
@@ -24,6 +27,9 @@ export default function App() {
               <Route element={<AppLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="playground" element={<Playground />} />
+                <Route path="collections" element={<Collections />} />
+                <Route path="suites" element={<TestSuites />} />
+                <Route path="diff" element={<ResponseDiff />} />
                 <Route path="history" element={<History />} />
                 <Route path="*" element={<Dashboard />} />
               </Route>

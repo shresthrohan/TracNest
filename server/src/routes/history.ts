@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
 import { Execution, oid } from "../models/Execution.js";
 import { runAndRecord } from "./execute.js";
+import { SavedRequest } from "../models/SavedRequest.js";
 import { HttpError } from "../utils/HttpError.js";
 import type { RequestSpec } from "../services/executor/execute.js";
 import { requestSpecSchema } from "../validators/request.js";
@@ -16,13 +17,15 @@ const listQuery = z.object({
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).optional(),
   status: z.enum(["2xx", "3xx", "4xx", "5xx", "error"]).optional(),
   q: z.string().max(200).optional(),
+  requestId: z.string().regex(/^[0-9a-f]{24}$/i).optional(),
 });
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 router.get("/", async (req, res) => {
-  const { page, limit, method, status, q } = listQuery.parse(req.query);
+  const { page, limit, method, status, q, requestId } = listQuery.parse(req.query);
   const filter: Record<string, unknown> = { userId: oid(req.userId) };
+  if (requestId) filter.requestId = oid(requestId);
   if (method) filter["request.method"] = method;
   if (q) filter["request.url"] = { $regex: escapeRe(q), $options: "i" };
   if (status === "error") filter.error = { $exists: true };
@@ -55,9 +58,9 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/:id/rerun", async (req, res) => {
   const ex = await owned(req.userId, req.params.id);
-  // TODO(task-8): if ex.requestId points to a SavedRequest owned by req.userId, use its current spec instead of the stored one.
-  // Stored spec has redacted secrets, so a rerun of an authenticated request needs the saved request to carry real credentials.
-  const spec = requestSpecSchema.parse(ex.request) as RequestSpec;
+  // A saved request holds the real credentials; the stored execution spec is redacted.
+  const saved = ex.requestId ? await SavedRequest.findOne({ _id: ex.requestId, userId: oid(req.userId) }) : null;
+  const spec = requestSpecSchema.parse(saved ? saved.spec : ex.request) as RequestSpec;
   const rerun = await runAndRecord(req.userId, spec, { requestId: ex.requestId?.toString(), source: "rerun" });
   res.status(201).json(rerun);
 });

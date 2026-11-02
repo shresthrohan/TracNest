@@ -36,8 +36,8 @@ executor, save them in collections, write assertion suites, diff responses, and 
 ## Status
 - [x] Spec + plan written; root workspace committed
 - [x] Phase 1–2 (auth, executor, playground, history, dashboard)
-- [ ] Phase 3–5 — next. Open item: history rerun replays redacted spec until Task 8 wires SavedRequest (`TODO(task-8)` in server routes)
-- [ ] Phase 3 collections · [ ] Phase 4 suites · [ ] Phase 5 diff
+- [x] Phase 3–5 (collections, assertion engine, suites + regression, JSON diff engine + diff UI)
+- [ ] Phase 6–8 — in progress
 - [ ] Phase 6 monitoring · [ ] Phase 7 AI + settings · [ ] Phase 8 hardening + deploy
 
 ## Known environment notes

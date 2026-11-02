@@ -83,3 +83,21 @@ describe("execute + history", () => {
     expect((await a.get(`/api/history/${id}`)).status).toBe(404);
   });
 });
+
+describe("diff route", () => {
+  const post = (a: any, path: string) => a.post("/api/execute").send({ spec: spec(path) });
+  it("diffs two owned executions; foreign/invalid -> 404", async () => {
+    const a = await agentFor("a@x.com");
+    const e1 = (await post(a, "/x")).body;
+    const e2 = (await post(a, "/err")).body;
+    const d = await a.get(`/api/diff?a=${e1.id}&b=${e2.id}`);
+    expect(d.status).toBe(200);
+    expect(d.body).toMatchObject({ bodyKind: "json", changes: [], status: { before: 200, after: 500 } });
+    expect(d.body.a).toMatchObject({ id: e1.id, statusCode: 200 });
+    expect(d.body.b.id).toBe(e2.id);
+    const b = await agentFor("b@x.com");
+    expect((await b.get(`/api/diff?a=${e1.id}&b=${e2.id}`)).status).toBe(404);
+    expect((await a.get(`/api/diff?a=${e1.id}&b=nope`)).status).toBe(404);
+    expect((await a.get(`/api/diff?a=${e1.id}`)).status).toBe(400);
+  });
+});

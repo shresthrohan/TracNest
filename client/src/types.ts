@@ -74,3 +74,34 @@ export const emptySpec = (): RequestSpec => ({
   auth: { type: 'none' },
   body: { mode: 'none', content: '' },
 })
+
+export type Collection = { id: string; name: string; description?: string; requestCount: number; createdAt: string }
+export type SavedRequest = { id: string; collectionId: string; name: string; order: number; spec: RequestSpec }
+
+export type AssertionKind = 'status' | 'maxTime' | 'exists' | 'equals' | 'type' | 'contains'
+export type Assertion = { id: string; kind: AssertionKind; path?: string; expected?: unknown }
+export type AssertionResult = { id: string; passed: boolean; actual?: unknown; message: string }
+export type DiffKind = 'added' | 'removed' | 'changed' | 'type'
+export type DiffChange = { path: string; kind: DiffKind; before?: unknown; after?: unknown }
+export type TestSuite = {
+  id: string
+  requestId: string
+  name: string
+  assertions: Assertion[]
+  lastRun?: {
+    executionId: string
+    results: AssertionResult[]
+    passed: number
+    failed: number
+    durationMs: number
+    ranAt: string
+    regression?: { changes: DiffChange[]; newlyFailing: string[] }
+  }
+}
+export type DiffResult = {
+  a: Partial<Execution>
+  b: Partial<Execution>
+  changes: DiffChange[]
+  status?: { before?: number; after?: number }
+  bodyKind: 'json' | 'text'
+}
