@@ -82,3 +82,18 @@ describe("suites", () => {
     expect((await b.get("/api/suites")).body).toHaveLength(0);
   });
 });
+
+describe("regression storage", () => {
+  it("saves a run whose response gained a 150-level-deep subtree", async () => {
+    const { a, r } = await setup("deep@x.com");
+    const s = (await a.post("/api/suites").send({ requestId: r.id, name: "S", assertions: asserts })).body;
+    expect((await a.post(`/api/suites/${s.id}/run`)).status).toBe(200);
+    let deep: unknown = 1;
+    for (let i = 0; i < 150; i++) deep = { n: deep };
+    payload = { id: 1, name: "x", age: 22, deep };
+    const run = await a.post(`/api/suites/${s.id}/run`);
+    expect(run.status).toBe(200);
+    const added = run.body.lastRun.regression.changes.find((c: { path: string }) => c.path === "deep");
+    expect(typeof added.after).toBe("string");
+  });
+});

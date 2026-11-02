@@ -81,3 +81,11 @@ To test against APIs on your own machine, set `ALLOW_PRIVATE_TARGETS=true` in `s
   `CLIENT_ORIGIN`, and optionally `ANTHROPIC_API_KEY`.
 - **Web:** Vercel with root `client/`. Update the Render host in `client/vercel.json`; the rewrite keeps
   `/api` same-origin so the auth cookie stays first-party.
+
+## Known limits
+
+- Rate limits are in-memory per process; use a shared store (e.g. Redis) when running several instances.
+- Sessions are stateless JWTs (7-day expiry); logout clears the cookie but does not revoke the token.
+- The executor connects to the first resolved public IP only (no fallback across addresses).
+- Execution history is kept until deleted; add a TTL index for retention.
+- `TRUST_PROXY` must match the real proxy hop count of the deployment (check `X-Forwarded-For`).

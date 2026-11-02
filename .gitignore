@@ -4,3 +4,4 @@ dist
 coverage
 .claude/settings.local.json
 .superpowers
+.playwright-mcp

@@ -38,7 +38,8 @@ executor, save them in collections, write assertion suites, diff responses, and 
 - [x] Phase 1–2 (auth, executor, playground, history, dashboard)
 - [x] Phase 3–5 (collections, assertion engine, suites + regression, JSON diff engine + diff UI)
 - [x] Phase 6–8 (monitoring + scheduler + anomaly, AI assistant, settings, rate limits, deploy config, README)
-- [ ] Final review + live smoke test
+- [x] Final review (0 critical, 7 important fixed) + re-review clean; live smoke test (dashboard, history, SSRF block verified in browser)
+- Open: set real Render host in client/vercel.json; verify TRUST_PROXY on deploy
 
 ## Known environment notes
 - Windows 11, Node 25, Git Bash. Docker installed but daemon may be off.

@@ -11,6 +11,12 @@ import { requestSpecSchema } from "../validators/request.js";
 import { HttpError } from "../utils/HttpError.js";
 import type { RequestSpec } from "../services/executor/execute.js";
 
+// Mongo rejects documents nested deeper than 100 levels; deep values are kept as a JSON preview.
+const MAX_STORED_CHANGES = 500;
+const depthOf = (v: unknown, d = 0): number =>
+  d > 20 || v === null || typeof v !== "object" ? d : Math.max(d, ...Object.values(v as object).map((x) => depthOf(x, d + 1)));
+const storable = (v: unknown) => (v !== undefined && depthOf(v) > 20 ? JSON.stringify(v).slice(0, 2000) : v);
+
 const router = Router();
 router.use(requireAuth);
 
@@ -86,7 +92,9 @@ router.post("/:id/run", async (req, res) => {
   if (prev && prevExec) {
     const passedBefore = new Set(prev.results.filter((r) => r.passed).map((r) => r.id));
     lastRun.regression = {
-      changes: diffBodies(prevExec.responseBody, ex.responseBody).changes,
+      changes: diffBodies(prevExec.responseBody, ex.responseBody).changes.slice(0, MAX_STORED_CHANGES).map((c) => ({
+        ...c, before: storable(c.before), after: storable(c.after),
+      })),
       newlyFailing: results.filter((r) => !r.passed && passedBefore.has(r.id)).map((r) => r.id),
     };
   }
