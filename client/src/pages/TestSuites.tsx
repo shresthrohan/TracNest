@@ -154,9 +154,9 @@ function SuiteDetail({ suite, onDeleted }: { suite: TestSuite; onDeleted: () => 
       </div>
 
       {last && (
-        <div className={cn('flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border px-3 py-2', last.failed ? 'border-destructive/30 bg-destructive/5' : 'border-success/30 bg-success/5')}>
-          {last.failed ? <XCircle className="size-4 text-destructive" /> : <CheckCircle2 className="size-4 text-success" />}
-          <span className="font-medium">{last.failed ? `${last.failed} failed` : 'All passed'}</span>
+        <div className={cn('flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border px-3 py-2', runFailed(last) ? 'border-destructive/30 bg-destructive/5' : last.passed ? 'border-success/30 bg-success/5' : 'bg-muted/30')}>
+          {runFailed(last) ? <XCircle className="size-4 text-destructive" /> : last.passed ? <CheckCircle2 className="size-4 text-success" /> : null}
+          <span className="font-medium">{last.error ? `Request failed · ${last.error.code.replace(/_/g, ' ')}` : last.failed ? `${last.failed} failed` : last.passed ? 'All passed' : 'No assertions ran'}</span>
           <span className="text-muted-foreground">{last.passed} passed</span>
           <span className="font-mono text-xs text-muted-foreground">{formatMs(last.durationMs)}</span>
           <span className="ml-auto text-xs text-muted-foreground">{timeAgo(last.ranAt)}</span>
@@ -192,6 +192,8 @@ function SuiteDetail({ suite, onDeleted }: { suite: TestSuite; onDeleted: () => 
   )
 }
 
+const runFailed = (r: { failed: number; error?: unknown }) => r.failed > 0 || !!r.error
+
 export default function TestSuites() {
   const [selected, setSelected] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -222,7 +224,7 @@ export default function TestSuites() {
               <button key={s.id} onClick={() => setSelected(s.id)}
                 className={cn('flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left transition-colors hover:bg-accent', s.id === current?.id && 'bg-accent text-foreground')}>
                 <span className="truncate">{s.name}</span>
-                {s.lastRun && <span className={cn('size-2 shrink-0 rounded-full', s.lastRun.failed ? 'bg-destructive' : 'bg-success')} title={s.lastRun.failed ? 'Last run failed' : 'Last run passed'} />}
+                {s.lastRun && <span className={cn('size-2 shrink-0 rounded-full', runFailed(s.lastRun) ? 'bg-destructive' : s.lastRun.passed ? 'bg-success' : 'bg-muted-foreground')} title={runFailed(s.lastRun) ? 'Last run failed' : s.lastRun.passed ? 'Last run passed' : 'No assertions ran'} />}
               </button>
             ))}
           </div>

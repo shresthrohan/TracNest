@@ -95,6 +95,7 @@ export type TestSuite = {
     failed: number
     durationMs: number
     ranAt: string
+    error?: { code: string; message: string }
     regression?: { changes: DiffChange[]; newlyFailing: string[] }
   }
 }

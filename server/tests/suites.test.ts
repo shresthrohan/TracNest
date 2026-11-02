@@ -97,3 +97,17 @@ describe("regression storage", () => {
     expect(typeof added.after).toBe("string");
   });
 });
+
+describe("failed request runs", () => {
+  it("records the request error and does not use a failed run as the regression baseline", async () => {
+    const { a, r } = await setup("fail@x.com");
+    const s = (await a.post("/api/suites").send({ requestId: r.id, name: "S", assertions: [] })).body;
+    await a.patch(`/api/requests/${r.id}`).send({ spec: { method: "GET", url: "http://127.0.0.1:1" } });
+    const bad = (await a.post(`/api/suites/${s.id}/run`)).body.lastRun;
+    expect(bad.error.code).toBe("CONNECTION");
+    await a.patch(`/api/requests/${r.id}`).send({ spec: { method: "GET", url: base } });
+    const good = (await a.post(`/api/suites/${s.id}/run`)).body.lastRun;
+    expect(good.error).toBeUndefined();
+    expect(good.regression).toBeUndefined();
+  });
+});

@@ -88,8 +88,10 @@ router.post("/:id/run", async (req, res) => {
     failed: results.filter((r) => !r.passed).length,
     durationMs: Date.now() - started,
     ranAt: new Date(),
+    ...(ex.error ? { error: { code: ex.error.code, message: ex.error.message } } : {}),
   };
-  if (prev && prevExec) {
+  // A run that got no response is not a baseline: diffing against it reports the whole body as changed.
+  if (prev && prevExec && !prevExec.error && !ex.error) {
     const passedBefore = new Set(prev.results.filter((r) => r.passed).map((r) => r.id));
     lastRun.regression = {
       changes: diffBodies(prevExec.responseBody, ex.responseBody).changes.slice(0, MAX_STORED_CHANGES).map((c) => ({
