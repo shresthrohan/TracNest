@@ -21,10 +21,12 @@ export function buildAiContext(e: Exec) {
   let url = e.request?.url ?? "";
   try {
     const u = new URL(url);
+    u.username = "";
+    u.password = "";
     for (const k of [...u.searchParams.keys()]) u.searchParams.set(k, "");
     url = u.toString();
   } catch {
-    url = url.split("?")[0];
+    url = url.split("?")[0].replace(/\/\/[^/]*@/, "//");
   }
   const reqHeaders = Object.fromEntries((e.request?.headers ?? []).filter((h) => h.enabled !== false).map((h) => [h.key, h.value]));
   return {

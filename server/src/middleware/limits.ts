@@ -4,7 +4,7 @@ import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { env } from "../config/env.js";
 import { HttpError } from "../utils/HttpError.js";
 
-export type Limits = { globalMax?: number; executeMax?: number };
+export type Limits = { globalMax?: number; executeMax?: number; aiMax?: number };
 
 // user id when the cookie verifies, else client IP
 function key(req: Request): string {
@@ -19,11 +19,11 @@ function key(req: Request): string {
 const relaxed = env.NODE_ENV === "test" ? 1_000_000 : undefined;
 
 // ponytail: in-memory stores, per-process; use a shared store if scaled out
-const make = (windowMs: number, limit: number) =>
+const make = (windowMs: number, limit: number, keyGenerator = key) =>
   rateLimit({
     windowMs,
     limit,
-    keyGenerator: key,
+    keyGenerator,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_q, _r, next) => next(new HttpError(429, "Too many requests", "RATE_LIMITED")),
@@ -31,3 +31,8 @@ const make = (windowMs: number, limit: number) =>
 
 export const globalLimiter = (max?: number) => make(15 * 60 * 1000, max ?? relaxed ?? 300);
 export const executeLimiter = (max?: number) => make(60 * 1000, max ?? relaxed ?? 60);
+export const aiLimiter = (max?: number) => make(60 * 1000, max ?? relaxed ?? 10);
+
+// login/register: per IP + email, so one shared IP (a proxy) cannot lock everyone out
+export const authKey = (req: Request) => "a:" + ipKeyGenerator(req.ip ?? "") + ":" + String(req.body?.email ?? "").toLowerCase();
+export const authLimiter = () => make(15 * 60 * 1000, env.NODE_ENV === "test" ? 10000 : 20, authKey);

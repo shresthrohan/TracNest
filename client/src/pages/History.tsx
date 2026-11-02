@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { METHODS, type Execution, type HistoryPage } from '@/types'
 
 const LIMIT = 20
+const hasRedacted = (v: unknown) => /\[REDACTED\]|%5BREDACTED%5D/i.test(JSON.stringify(v))
 const ALL = 'all'
 
 function useDebounced<T>(v: T, ms: number) {
@@ -155,10 +156,13 @@ export default function History() {
             {detail.data && (
               <>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => rerun.mutate(detail.data.id)} disabled={rerun.isPending}>
-                    {rerun.isPending ? <Loader2 className="animate-spin" /> : <Play />}Rerun
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => nav(`/playground?execution=${detail.data.id}`)}><SquareArrowOutUpRight />Open in Playground</Button>
+                  {/* Without a saved request the stored secrets are redacted, so a direct rerun would send placeholders. */}
+                  {(detail.data.requestId || !hasRedacted(detail.data.request)) && (
+                    <Button size="sm" onClick={() => rerun.mutate(detail.data.id)} disabled={rerun.isPending}>
+                      {rerun.isPending ? <Loader2 className="animate-spin" /> : <Play />}Rerun
+                    </Button>
+                  )}
+                  <Button size="sm" variant={detail.data.requestId || !hasRedacted(detail.data.request) ? "outline" : "default"} onClick={() => nav(`/playground?execution=${detail.data.id}`)}><SquareArrowOutUpRight />Open in Playground</Button>
                   <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleting(detail.data.id)}><Trash2 />Delete</Button>
                 </div>
                 <ResponseViewer execution={detail.data} />

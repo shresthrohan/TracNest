@@ -29,7 +29,7 @@ async function owned(userId: string, id: string) {
 }
 
 router.get("/", async (req, res) => {
-  const { requestId } = z.object({ requestId: z.string().optional() }).parse(req.query);
+  const { requestId } = z.object({ requestId: z.string().regex(/^[0-9a-f]{24}$/i).optional() }).parse(req.query);
   res.json(await TestSuite.find({ userId: oid(req.userId), ...(requestId && { requestId }) }).sort({ createdAt: 1 }));
 });
 

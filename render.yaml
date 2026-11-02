@@ -11,6 +11,8 @@ services:
         value: production
       - key: ALLOW_PRIVATE_TARGETS
         value: "false"
+      - key: TRUST_PROXY # proxy hops in front of the app (Vercel rewrite + Render is likely 2; verify with x-forwarded-for)
+        value: "1"
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET

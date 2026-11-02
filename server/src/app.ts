@@ -13,17 +13,21 @@ import suiteRoutes from "./routes/suites.js";
 import diffRoutes from "./routes/diff.js";
 import monitorRoutes from "./routes/monitors.js";
 import aiRoutes from "./routes/ai.js";
-import { globalLimiter, executeLimiter, type Limits } from "./middleware/limits.js";
+import { globalLimiter, executeLimiter, aiLimiter, type Limits } from "./middleware/limits.js";
 
 export function createApp(limits: Limits = {}) {
   const app = express();
-  if (env.NODE_ENV === "production") app.set("trust proxy", 1); // Render sits behind a proxy
+  const hops = env.TRUST_PROXY ?? (env.NODE_ENV === "production" ? 1 : undefined);
+  if (hops !== undefined) app.set("trust proxy", hops);
+  const exec = executeLimiter(limits.executeMax); // one instance: every outbound-request route shares the budget
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
   app.use("/api", globalLimiter(limits.globalMax));
   app.get("/api/health", (_req, res) => void res.json({ ok: true }));
   app.use("/api/auth", authRoutes);
-  app.use("/api/execute", executeLimiter(limits.executeMax), executeRoutes);
+  app.post(["/api/history/:id/rerun", "/api/suites/:id/run", "/api/monitors/:id/check"], exec);
+  app.post("/api/ai/explain", aiLimiter(limits.aiMax));
+  app.use("/api/execute", exec, executeRoutes);
   app.use("/api/history", historyRoutes);
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/collections", collectionRoutes);

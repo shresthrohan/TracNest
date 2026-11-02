@@ -6,6 +6,7 @@ import { runAndRecord } from "./execute.js";
 import { SavedRequest } from "../models/SavedRequest.js";
 import { HttpError } from "../utils/HttpError.js";
 import type { RequestSpec } from "../services/executor/execute.js";
+import { hasRedacted } from "../services/executor/redact.js";
 import { requestSpecSchema } from "../validators/request.js";
 
 const router = Router();
@@ -60,6 +61,8 @@ router.post("/:id/rerun", async (req, res) => {
   const ex = await owned(req.userId, req.params.id);
   // A saved request holds the real credentials; the stored execution spec is redacted.
   const saved = ex.requestId ? await SavedRequest.findOne({ _id: ex.requestId, userId: oid(req.userId) }) : null;
+  if (!saved && hasRedacted(ex.request))
+    throw new HttpError(409, "This request had secrets that were not stored. Open it in the Playground and re-enter them.", "NEEDS_SECRETS");
   const spec = requestSpecSchema.parse(saved ? saved.spec : ex.request) as RequestSpec;
   const rerun = await runAndRecord(req.userId, spec, { requestId: ex.requestId?.toString(), source: "rerun" });
   res.status(201).json(rerun);

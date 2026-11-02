@@ -8,7 +8,9 @@ export function getPath(obj: unknown, path: string): unknown {
   let cur = obj;
   for (const m of path.matchAll(/([^.[\]]+)|\[(\d+)\]/g)) {
     if (cur === null || typeof cur !== "object") return undefined;
-    cur = (cur as Record<string, unknown>)[m[1] ?? m[2]];
+    const k = m[1] ?? m[2];
+    if (!Object.hasOwn(cur, k)) return undefined;
+    cur = (cur as Record<string, unknown>)[k];
   }
   return cur;
 }

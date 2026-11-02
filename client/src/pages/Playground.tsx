@@ -35,6 +35,8 @@ export default function Playground() {
     return () => { live = false }
   }, [executionId, requestId])
 
+  const hasPlaceholders = /\[REDACTED\]|%5BREDACTED%5D/i.test(JSON.stringify(spec))
+
   const send = useMutation({
     mutationFn: () => api<Execution>('/execute', { body: { spec, ...(requestId ? { requestId } : {}) } }),
     onSuccess: setResult,
@@ -70,6 +72,11 @@ export default function Playground() {
         defaultName={requestId && savedName ? `${savedName} (copy)` : spec.url.replace(/^https?:\/\//, '').slice(0, 60)}
         onSaved={(r) => { setSavedName(r.name); setParams({ request: r.id }, { replace: true }) }}
       />
+      {hasPlaceholders && (
+        <div role="alert" className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+          This request has <code>[REDACTED]</code> placeholders where secrets were stored out. Re-enter your credentials (auth, headers, URL password) before sending, or the placeholders will be sent as-is.
+        </div>
+      )}
       <RequestBuilder value={spec} onChange={setSpec} onSend={() => send.mutate()} sending={send.isPending} />
       <div className="border-t pt-4">
         {send.isPending ? (

@@ -39,8 +39,15 @@ export async function checkMonitor(m: MonitorDoc) {
   return check;
 }
 
-/** Claims due monitors one at a time (atomic nextRunAt bump) and checks them. Returns how many ran. */
+const MAX_IN_FLIGHT = 5;
+
+/** Claims due monitors (atomic nextRunAt bump) and checks them, up to 5 at a time. Returns how many ran. */
 export async function runDueMonitors(now = new Date()): Promise<number> {
+  const counts = await Promise.all(Array.from({ length: MAX_IN_FLIGHT }, () => worker(now)));
+  return counts.reduce((a, b) => a + b, 0);
+}
+
+async function worker(now: Date): Promise<number> {
   let n = 0;
   for (;;) {
     const m = await Monitor.findOneAndUpdate(

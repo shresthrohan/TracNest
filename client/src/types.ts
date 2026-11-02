@@ -18,7 +18,7 @@ export type RequestSpec = {
 }
 
 export type ExecErrorCode =
-  | 'BLOCKED' | 'TIMEOUT' | 'DNS' | 'CONNECTION' | 'TOO_LARGE' | 'INVALID_URL' | 'TOO_MANY_REDIRECTS'
+  | 'BLOCKED' | 'TIMEOUT' | 'DNS' | 'CONNECTION' | 'TOO_LARGE' | 'INVALID_URL' | 'INVALID_REQUEST' | 'TOO_MANY_REDIRECTS'
 
 export type ExecResult = {
   ok: boolean
