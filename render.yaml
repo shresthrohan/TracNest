@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: tracenest-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node dist/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOW_PRIVATE_TARGETS
+        value: "false"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

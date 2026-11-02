@@ -1,6 +1,7 @@
 import { Ban } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { JsonEditor } from '@/components/JsonEditor'
+import { AiPanel, useAiEnabled } from '@/components/AiPanel'
 import { StatusBadge } from '@/components/StatusBadge'
 import { formatBytes, formatMs, parseCookies, prettyBody } from '@/lib/format'
 import type { Execution } from '@/types'
@@ -13,6 +14,7 @@ export function ResponseViewer({ execution: ex }: { execution: Execution }) {
   const cookies = parseCookies(Object.entries(lc(ex.responseHeaders)).find(([k]) => k.toLowerCase() === 'set-cookie')?.[1])
   const body = ex.responseBody ?? ''
   const pretty = prettyBody(body)
+  const aiOn = useAiEnabled()
 
   return (
     <div className="space-y-3">
@@ -28,6 +30,8 @@ export function ResponseViewer({ execution: ex }: { execution: Execution }) {
           <div><p className="font-medium text-destructive">{ex.error.code.replace(/_/g, ' ')}</p><p className="mt-0.5 text-muted-foreground">{ex.error.message}</p></div>
         </div>
       )}
+
+      {aiOn && ex.id && <AiPanel key={ex.id} execution={ex} />}
 
       <Tabs defaultValue="body">
         <TabsList variant="line">

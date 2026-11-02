@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { FlaskConical, FolderOpen, GitCompareArrows, History, LayoutDashboard, Send } from 'lucide-react'
+import { Activity, FlaskConical, FolderOpen, GitCompareArrows, History, LayoutDashboard, Send, Settings } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Sidebar, type NavItem } from '@/components/Sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,7 +11,9 @@ const NAV: NavItem[] = [
   { to: '/collections', label: 'Collections', icon: FolderOpen },
   { to: '/suites', label: 'Test Suites', icon: FlaskConical },
   { to: '/diff', label: 'Response Diff', icon: GitCompareArrows },
+  { to: '/monitoring', label: 'Monitoring', icon: Activity },
   { to: '/history', label: 'Request History', icon: History },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function AppLayout() {

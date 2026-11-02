@@ -105,3 +105,38 @@ export type DiffResult = {
   status?: { before?: number; after?: number }
   bodyKind: 'json' | 'text'
 }
+
+export type MonitorStatus = 'pending' | 'up' | 'down'
+export type Monitor = {
+  id: string
+  name: string
+  spec: RequestSpec
+  intervalSec: number
+  expectedStatus: number
+  active: boolean
+  nextRunAt: string
+  lastCheckedAt?: string
+  currentStatus: MonitorStatus
+  uptime24h: number | null
+  avgMs24h: number | null
+  createdAt: string
+}
+export type MonitorCheck = {
+  id: string
+  monitorId: string
+  ok: boolean
+  statusCode?: number
+  responseTime: number
+  error?: { code: string; message: string }
+  anomaly: boolean
+  checkedAt: string
+}
+export type MonitorStats = {
+  uptime: number | null
+  avgMs: number | null
+  failed: number
+  total: number
+  series: MonitorCheck[]
+  anomalies: MonitorCheck[]
+}
+export type AiExplanation = { explanation: string; causes: string[]; steps: string[]; assertions: Assertion[] }

@@ -1,5 +1,6 @@
 process.env.JWT_SECRET ??= "test-secret-test-secret-test-secret-1234";
 process.env.NODE_ENV = "test";
+process.env.ANTHROPIC_API_KEY = ""; // AI tests never hit the network
 process.env.ALLOW_PRIVATE_TARGETS = "true"; // route tests hit a local http server
 import { beforeAll, afterAll, afterEach } from "vitest";
 import mongoose from "mongoose";

@@ -37,8 +37,8 @@ executor, save them in collections, write assertion suites, diff responses, and 
 - [x] Spec + plan written; root workspace committed
 - [x] Phase 1–2 (auth, executor, playground, history, dashboard)
 - [x] Phase 3–5 (collections, assertion engine, suites + regression, JSON diff engine + diff UI)
-- [ ] Phase 6–8 — in progress
-- [ ] Phase 6 monitoring · [ ] Phase 7 AI + settings · [ ] Phase 8 hardening + deploy
+- [x] Phase 6–8 (monitoring + scheduler + anomaly, AI assistant, settings, rate limits, deploy config, README)
+- [ ] Final review + live smoke test
 
 ## Known environment notes
 - Windows 11, Node 25, Git Bash. Docker installed but daemon may be off.
