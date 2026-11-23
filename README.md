@@ -2,6 +2,10 @@
 
 **Find API problems before your users do.**
 
+
+https://github.com/user-attachments/assets/c5d9c04e-2472-4d4d-a11e-d21f106a0760
+
+
 TraceNest is an API reliability and testing studio. Send requests, save them in collections, write
 assertion suites, compare responses across runs, and monitor endpoints on a schedule — all backed by
 real execution data.
