@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+      @font-face { font-family: "JBMono"; src: url("assets/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 800; }
+      :root {
+        --bg: oklch(0.155 0.004 270);
+        --surface: oklch(0.185 0.005 270);
+        --card: oklch(0.2 0.005 270);
+        --border: oklch(1 0 0 / 8%);
+        --input: oklch(1 0 0 / 12%);
+        --fg: oklch(0.96 0.003 270);
+        --muted: oklch(0.68 0.01 270);
+        --primary: oklch(0.78 0.12 180);
+        --primary-fg: oklch(0.18 0.02 190);
+        --success: oklch(0.76 0.15 155);
+        --danger: oklch(0.68 0.19 22);
+        --warning: oklch(0.8 0.15 80);
+        --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+        --mono: "JBMono", ui-monospace, monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+      #root { position: relative; width: 1920px; height: 1080px; font-family: var(--sans); color: var(--fg); overflow: hidden; }
+      .clip { position: absolute; inset: 0; }
+      .center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .mono { font-family: var(--mono); }
+
+      /* shared UI */
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+      .badge { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 7px; font-family: var(--mono); font-size: 20px; font-weight: 600; }
+      .b-ok { color: var(--success); background: oklch(0.76 0.15 155 / 14%); }
+      .b-bad { color: var(--danger); background: oklch(0.68 0.19 22 / 14%); }
+      .method { font-family: var(--mono); font-weight: 700; color: var(--success); }
+      .caption { font-size: 44px; font-weight: 500; letter-spacing: -0.02em; color: var(--fg); }
+      .caption .dim { color: var(--muted); }
+      .ch { opacity: 0; }
+
+      /* scene 1: response viewer */
+      #resp { width: 860px; padding: 30px 36px 34px; }
+      #resp .meta { display: flex; gap: 18px; align-items: center; font-family: var(--mono); font-size: 22px; color: var(--muted); margin-bottom: 22px; }
+      #resp .tabs { display: flex; gap: 30px; font-size: 22px; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 20px; }
+      #resp .tabs b { color: var(--fg); font-weight: 600; }
+      .json { font-family: var(--mono); font-size: 30px; line-height: 50px; background: oklch(0.22 0.006 270); border-radius: 10px; padding: 18px 26px; }
+      .json .ln { display: flex; overflow: hidden; height: 50px; white-space: pre; border-radius: 6px; }
+      .json .k { color: oklch(0.72 0.17 20); }
+      .json .s { color: oklch(0.78 0.14 140); }
+      .json .n { color: oklch(0.82 0.14 80); }
+      .json .p { color: var(--muted); }
+      #ln-age { position: relative; }
+      #strike { position: absolute; left: 44px; top: 25px; height: 3px; width: 250px; background: var(--danger); transform-origin: left center; }
+      #hookcap { margin-top: 64px; font-size: 64px; font-weight: 600; letter-spacing: -0.035em; }
+
+      /* scene 2 / 6: wordmark */
+      .mark { display: flex; align-items: center; gap: 28px; }
+      .mark svg { width: 120px; height: 120px; }
+      .mark .word { font-size: 132px; font-weight: 650; letter-spacing: -0.045em; }
+      .tagline { margin-top: 34px; font-size: 48px; font-weight: 450; color: var(--muted); letter-spacing: -0.02em; }
+      #glow { position: absolute; left: 50%; top: 50%; width: 1100px; height: 640px; margin: -320px 0 0 -550px; border-radius: 50%;
+        background: radial-gradient(closest-side, oklch(0.78 0.12 180 / 18%), transparent); opacity: 0; }
+
+      /* scene 3/4: suites */
+      #suiteCap { position: absolute; left: 140px; top: 96px; }
+      #suite { position: absolute; left: 140px; top: 190px; width: 1060px; padding: 30px 34px; }
+      #suite .title { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+      #suite .sub { margin-top: 8px; font-size: 22px; color: var(--muted); display: flex; gap: 12px; }
+      #suite .actions { display: flex; gap: 14px; margin: 22px 0 20px; }
+      .btn { height: 46px; padding: 0 20px; border-radius: 9px; display: inline-flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 550; border: 1px solid var(--input); color: var(--fg); }
+      .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+      #summary { position: relative; height: 54px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
+      #summary > div { position: absolute; inset: 0; display: flex; align-items: center; gap: 18px; padding: 0 18px; font-size: 22px; border-radius: 10px; opacity: 0; }
+      #sumOk { border: 1px solid oklch(0.76 0.15 155 / 30%); background: oklch(0.76 0.15 155 / 6%); }
+      #sumBad { border: 1px solid oklch(0.68 0.19 22 / 30%); background: oklch(0.68 0.19 22 / 6%); }
+      #summary b { font-weight: 600; }
+      #summary .m { color: var(--muted); }
+      .row { display: flex; align-items: center; gap: 16px; height: 50px; font-size: 21px; }
+      .row .ic { width: 28px; height: 28px; position: relative; flex: none; }
+      .row .ic > * { position: absolute; inset: 0; }
+      .row .kind { width: 170px; height: 40px; border: 1px solid var(--input); border-radius: 8px; display: flex; align-items: center; padding: 0 14px; }
+      .row .path { width: 190px; height: 40px; border: 1px solid var(--input); border-radius: 8px; display: flex; align-items: center; padding: 0 14px; font-family: var(--mono); }
+      .row .exp { width: 120px; white-space: nowrap; color: var(--muted); font-family: var(--mono); }
+      .row .msg { margin-left: auto; white-space: nowrap; font-family: var(--mono); font-size: 21px; color: var(--danger); opacity: 0; }
+      .pending { border: 2px solid var(--input); border-radius: 50%; }
+      #regress { position: absolute; left: 1230px; top: 190px; width: 550px; padding: 30px 32px; opacity: 0; }
+      #regress h3 { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
+      #regress .hint { font-size: 20px; color: var(--muted); margin-bottom: 24px; }
+      .chg { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 10px; margin-bottom: 14px; font-family: var(--mono); font-size: 22px; }
+      .chg.rm { background: oklch(0.68 0.19 22 / 10%); border: 1px solid oklch(0.68 0.19 22 / 28%); }
+      .chg.add { background: oklch(0.76 0.15 155 / 10%); border: 1px solid oklch(0.76 0.15 155 / 28%); }
+      .chg .tag { font-family: var(--sans); font-size: 17px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+      .chg.rm .tag { color: var(--danger); } .chg.add .tag { color: var(--success); }
+      .chg .val { margin-left: auto; color: var(--muted); }
+      #newly { margin-top: 10px; font-size: 22px; display: flex; align-items: center; gap: 12px; }
+      #newly b { color: var(--danger); font-family: var(--mono); }
+
+      /* scene 5: playground */
+      #pg { width: 1500px; }
+      #pgCap { margin-bottom: 56px; }
+      #bar { display: flex; gap: 14px; width: 1500px; }
+      #bar .sel { width: 130px; height: 74px; border: 1px solid var(--input); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+      #bar .url { flex: 1; height: 74px; border: 1px solid var(--input); border-radius: 11px; display: flex; align-items: center; padding: 0 24px; font-family: var(--mono); font-size: 28px; background: oklch(1 0 0 / 2%); }
+      #bar .send { width: 160px; height: 74px; font-size: 26px; justify-content: center; }
+      #caret { display: inline-block; width: 2px; height: 34px; background: var(--fg); margin-left: 2px; }
+      #blocked { margin-top: 40px; display: flex; align-items: center; gap: 22px; padding: 22px 26px; border-radius: 12px; border: 1px solid oklch(0.68 0.19 22 / 30%); background: oklch(0.68 0.19 22 / 8%); opacity: 0; width: 1500px; }
+      #blocked .badge { height: 42px; font-size: 24px; }
+      #blocked .t { font-size: 28px; }
+      #blocked .t small { display: block; font-size: 21px; color: var(--muted); margin-top: 4px; }
+
+      #cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; opacity: 0; z-index: 50; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="21.5" data-width="1920" data-height="1080">
+
+      <!-- Scene 1: hook -->
+      <div id="s1" class="clip center" data-start="0" data-duration="3.25" data-track-index="0">
+        <div id="resp" class="card">
+          <div class="meta"><span class="badge b-ok">200</span><span>182 ms</span><span>77 B</span><span style="margin-left:auto">GET api.example.com/users/1</span></div>
+          <div class="tabs"><b>Body</b><span>Headers</span><span>Cookies</span><span>Details</span></div>
+          <div class="json">
+            <div class="ln"><span class="p">{</span></div>
+            <div class="ln">  <span class="k">"id"</span><span class="p">: </span><span class="n">1</span><span class="p">,</span></div>
+            <div class="ln">  <span class="k">"firstName"</span><span class="p">: </span><span class="s">"Emily"</span><span class="p">,</span></div>
+            <div class="ln">  <span class="k">"email"</span><span class="p">: </span><span class="s">"emily.johnson@x.dummyjson.com"</span><span class="p">,</span></div>
+            <div class="ln" id="ln-age">  <span class="k">"age"</span><span class="p">: </span><span class="n">29</span><i id="strike"></i></div>
+            <div class="ln" id="ln-phone" style="height:0">  <span class="k">"phone"</span><span class="p">: </span><span class="s">"+81 965-431-3024"</span></div>
+            <div class="ln"><span class="p">}</span></div>
+          </div>
+        </div>
+        <div id="hookcap" class="type" data-text="Your API just changed."></div>
+      </div>
+
+      <!-- Scene 2: reveal -->
+      <div id="s2" class="clip center" data-start="3.1" data-duration="2.9" data-track-index="1">
+        <div class="mark" id="m2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.12 180)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.586 5.414-5.172 5.172"/><path d="m18.586 13.414-5.172 5.172"/><path d="M6 12h12"/><circle cx="12" cy="20" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="20" cy="12" r="2"/><circle cx="4" cy="12" r="2"/></svg>
+          <span class="word">TraceNest</span>
+        </div>
+        <div class="tagline" id="t2">Find API problems before your users do.</div>
+      </div>
+
+      <!-- Scene 3 + 4: suites -->
+      <div id="s3" class="clip" data-start="5.6" data-duration="10.0" data-track-index="2">
+        <div id="suiteCap" class="caption">
+          <span id="cap3">Assertions on every run.</span>
+          <span id="cap4" style="position:absolute;left:0;top:0;white-space:nowrap;opacity:0">Every run is diffed <span class="dim">against the last one.</span></span>
+        </div>
+        <div id="suite" class="card">
+          <div class="title">User 1 contract</div>
+          <div class="sub"><span class="method">GET</span><span>Get user 1</span></div>
+          <div class="actions">
+            <span class="btn primary" id="runBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Run suite</span>
+            <span class="btn">Run failed only</span>
+            <span class="btn">Generate from response</span>
+          </div>
+          <div id="summary">
+            <div id="sumOk"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="oklch(0.76 0.15 155)" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><b>All passed</b><span class="m">8 passed</span><span class="m mono">949 ms</span></div>
+            <div id="sumBad"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.19 22)" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg><b>2 failed</b><span class="m">6 passed</span><span class="m mono">436 ms</span></div>
+          </div>
+          <div id="rows"></div>
+        </div>
+        <div id="regress" class="card">
+          <h3>Regression since last run</h3>
+          <div class="hint">Response structure changed</div>
+          <div class="chg rm"><span class="tag">Removed</span><span>age</span><span class="val">29</span></div>
+          <div class="chg add"><span class="tag">Added</span><span>phone</span><span class="val">"+81 965-431-3024"</span></div>
+          <div id="newly"><b>2</b> newly failing assertions</div>
+        </div>
+      </div>
+
+      <!-- Scene 5: guard -->
+      <div id="s5" class="clip center" data-start="15.45" data-duration="3.4" data-track-index="3">
+        <div id="pg">
+          <div id="pgCap" class="caption">SSRF-guarded. <span class="dim">Checked at connect time.</span></div>
+          <div id="bar">
+            <div class="sel method">GET</div>
+            <div class="url"><span id="urlText" class="type" data-text="http://169.254.169.254/latest/meta-data"></span><i id="caret"></i></div>
+            <span class="btn primary send" id="sendBtn">Send</span>
+          </div>
+          <div id="blocked"><span class="badge b-bad">BLOCKED</span><div class="t">Target address is not allowed</div></div>
+        </div>
+      </div>
+
+      <!-- Scene 6: outro -->
+      <div id="s6" class="clip center" data-start="18.45" data-duration="3.05" data-track-index="4">
+        <div id="glow"></div>
+        <div class="mark" id="m6">
+          <svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.12 180)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.586 5.414-5.172 5.172"/><path d="m18.586 13.414-5.172 5.172"/><path d="M6 12h12"/><circle cx="12" cy="20" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="20" cy="12" r="2"/><circle cx="4" cy="12" r="2"/></svg>
+          <span class="word">TraceNest</span>
+        </div>
+        <div class="tagline" id="t6">Find API problems before your users do.</div>
+      </div>
+
+      <svg id="cursor" class="clip" data-start="5.85" data-duration="12.8" data-track-index="5" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="white" stroke="black" stroke-width="1.4" stroke-linejoin="round"/></svg>
+
+      <!-- Audio -->
+      <audio id="music" data-start="0" data-duration="21.5" data-track-index="10" data-volume="0.55" data-fade-in="0.4" data-fade-out="1.6" src="assets/music/happy-beats-business-moves-vol-1-by-ende-dot-app.mp3"></audio>
+      <audio id="sfx1" data-start="0.5" data-duration="0.15" data-track-index="11" data-volume="0.45" src="assets/sfx/impactSoft_medium_004.ogg"></audio>
+      <audio id="sfx2" data-start="1.32" data-duration="0.2" data-track-index="12" data-volume="0.12" src="assets/sfx/keypress-002.wav"></audio>
+      <audio id="sfx3" data-start="1.55" data-duration="0.2" data-track-index="13" data-volume="0.12" src="assets/sfx/keypress-002.wav"></audio>
+      <audio id="sfx4" data-start="3.52" data-duration="0.3" data-track-index="11" data-volume="0.5" src="assets/sfx/impactSoft_medium_001.ogg"></audio>
+      <audio id="sfx5" data-start="7.02" data-duration="0.2" data-track-index="12" data-volume="0.4" src="assets/sfx/click2.ogg"></audio>
+      <audio id="sfx6" data-start="7.3" data-duration="0.1" data-track-index="13" data-volume="0.14" src="assets/sfx/click_003.ogg"></audio>
+      <audio id="sfx7" data-start="7.66" data-duration="0.1" data-track-index="14" data-volume="0.14" src="assets/sfx/click_003.ogg"></audio>
+      <audio id="sfx8" data-start="8.02" data-duration="0.1" data-track-index="13" data-volume="0.14" src="assets/sfx/click_003.ogg"></audio>
+      <audio id="sfx9" data-start="8.38" data-duration="0.1" data-track-index="14" data-volume="0.14" src="assets/sfx/click_003.ogg"></audio>
+      <audio id="sfx10" data-start="10.92" data-duration="0.2" data-track-index="12" data-volume="0.4" src="assets/sfx/click2.ogg"></audio>
+      <audio id="sfx11" data-start="11.52" data-duration="0.6" data-track-index="11" data-volume="0.45" src="assets/sfx/impactSoft_heavy_003.ogg"></audio>
+      <audio id="sfx12" data-start="12.3" data-duration="0.5" data-track-index="13" data-volume="0.3" src="assets/sfx/card-slide-1.ogg"></audio>
+      <audio id="sfx13" data-start="15.8" data-duration="0.2" data-track-index="12" data-volume="0.1" src="assets/sfx/keypress-002.wav"></audio>
+      <audio id="sfx14" data-start="16.0" data-duration="0.2" data-track-index="13" data-volume="0.1" src="assets/sfx/keypress-002.wav"></audio>
+      <audio id="sfx15" data-start="16.2" data-duration="0.2" data-track-index="14" data-volume="0.1" src="assets/sfx/keypress-002.wav"></audio>
+      <audio id="sfx16" data-start="16.42" data-duration="0.2" data-track-index="12" data-volume="0.4" src="assets/sfx/click2.ogg"></audio>
+      <audio id="sfx17" data-start="16.52" data-duration="0.3" data-track-index="11" data-volume="0.5" src="assets/sfx/impactSoft_medium_004.ogg"></audio>
+      <audio id="sfx18" data-start="20.02" data-duration="0.3" data-track-index="11" data-volume="0.45" src="assets/sfx/impactSoft_medium_001.ogg"></audio>
+    </div>
+
+    <script>
+      // Build static DOM first (deterministic).
+      const ROWS = [
+        ["Field exists", "id", "any value"], ["Field type", "id", "number"],
+        ["Field exists", "firstName", "any value"], ["Field type", "firstName", "string"],
+        ["Field exists", "email", "any value"], ["Field type", "email", "string"],
+        ["Field exists", "age", "any value", "age is missing"],
+        ["Field type", "age", "number", "age: expected type number, got undefined"],
+      ];
+      const OK = '<svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.76 0.15 155)" stroke-width="2.6"><path d="m5 12 5 5 9-10"/></svg>';
+      const BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.19 22)" stroke-width="2.6"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+      document.getElementById("rows").innerHTML = ROWS.map((r, i) =>
+        `<div class="row" id="r${i}"><span class="ic"><i class="pending"></i><span class="ok" style="opacity:0">${OK}</span><span class="bad" style="opacity:0">${BAD}</span></span>` +
+        `<span class="kind">${r[0]}</span><span class="path">${r[1]}</span><span class="exp">${r[2]}</span>` +
+        (r[3] ? `<span class="msg">${r[3]}</span>` : "") + `</div>`).join("");
+      document.querySelectorAll(".type").forEach((el) => {
+        el.innerHTML = [...el.dataset.text].map((c) => `<span class="ch">${c === " " ? "&nbsp;" : c}</span>`).join("");
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      const type = (sel, start, perChar) => {
+        document.querySelectorAll(sel + " .ch").forEach((c, i) => tl.set(c, { opacity: 1 }, start + i * perChar));
+      };
+
+      // Scene 1 — hook
+      tl.fromTo("#resp", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0);
+      tl.fromTo("#strike", { scaleX: 0 }, { scaleX: 1, duration: 0.22, ease: "power2.out" }, 0.5);
+      tl.to("#ln-age", { backgroundColor: "oklch(0.68 0.19 22 / 16%)", duration: 0.15 }, 0.5);
+      tl.to("#ln-age", { opacity: 0, duration: 0.12 }, 1.05);
+      tl.to("#ln-age", { height: 0, duration: 0.3, ease: "power2.inOut" }, 1.17);
+      tl.to("#ln-phone", { height: 50, duration: 0.3, ease: "power2.out" }, 1.17);
+      tl.fromTo("#ln-phone", { backgroundColor: "oklch(0.76 0.15 155 / 22%)" }, { backgroundColor: "oklch(0.76 0.15 155 / 10%)", duration: 0.8 }, 1.2);
+      type("#hookcap", 1.3, 0.02);
+      tl.to("#s1", { opacity: 0, duration: 0.25, ease: "power1.in" }, 2.95);
+
+      // Scene 2 — reveal
+      tl.fromTo("#s2", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 3.15);
+      tl.fromTo("#m2 svg", { scale: 0.6, rotation: -30, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.5, ease: "back.out(1.6)" }, 3.15);
+      tl.fromTo("#m2 .word", { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 3.5); // beat-locked: 3.52s
+      tl.fromTo("#t2", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 3.75);
+      tl.to("#s2", { opacity: 0, y: -40, duration: 0.28, ease: "power2.in" }, 5.68);
+
+      // Scene 3 — suite passes
+      tl.fromTo("#suite", { opacity: 0, y: 30, x: 290 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 6.0);
+      tl.fromTo("#suiteCap", { opacity: 0, x: 274 }, { opacity: 1, x: 290, duration: 0.4, ease: "power3.out" }, 6.05);
+      tl.fromTo("#cursor", { opacity: 0, x: 1200, y: 760 }, { opacity: 1, duration: 0.2 }, 6.3);
+      tl.to("#cursor", { x: 540, y: 345, duration: 0.6, ease: "power2.inOut" }, 6.35);
+      tl.to("#runBtn", { scale: 0.95, duration: 0.08 }, 7.0).to("#runBtn", { scale: 1, duration: 0.15 }, 7.08);
+      // beat-grid (accent ticks, 0.18s apart; rows are texture, the summary is the read)
+      ROWS.forEach((_, i) => {
+        tl.set(`#r${i} .pending`, { opacity: 0 }, 7.3 + i * 0.18);
+        tl.fromTo(`#r${i} .ok`, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.2, ease: "back.out(2)" }, 7.3 + i * 0.18);
+      });
+      tl.to("#sumOk", { opacity: 1, duration: 0.3 }, 8.8);
+
+      // Scene 4 — rerun breaks
+      tl.to("#cap3", { opacity: 0, duration: 0.25 }, 10.45);
+      tl.fromTo("#cap4", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 10.6);
+      tl.to("#cursor", { x: 552, y: 350, duration: 0.3 }, 10.55);
+      tl.to("#runBtn", { scale: 0.95, duration: 0.08 }, 10.9).to("#runBtn", { scale: 1, duration: 0.15 }, 10.98);
+      tl.to("#cursor", { opacity: 0, duration: 0.3 }, 11.4);
+      tl.to("#sumOk", { opacity: 0, duration: 0.2 }, 11.05);
+      tl.to("#rows .ok", { opacity: 0.25, duration: 0.2 }, 11.05);
+      [6, 7].forEach((i) => {
+        tl.set(`#r${i} .ok`, { opacity: 0 }, 11.5);
+        tl.fromTo(`#r${i} .bad`, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, 11.5); // beat-locked: 11.52s
+        tl.to(`#r${i}`, { backgroundColor: "oklch(0.68 0.19 22 / 7%)", duration: 0.25 }, 11.5);
+        tl.to(`#r${i} .exp`, { opacity: 0, width: 0, duration: 0.25 }, 11.5);
+        tl.fromTo(`#r${i} .msg`, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.35 }, 11.62);
+      });
+      [0, 1, 2, 3, 4, 5].forEach((i) => tl.to(`#r${i} .ok`, { opacity: 1, duration: 0.2 }, 11.5));
+      tl.to("#sumBad", { opacity: 1, duration: 0.25 }, 11.5);
+      tl.to(["#suite", "#suiteCap"], { x: 0, duration: 0.55, ease: "power3.inOut" }, 12.0);
+      tl.fromTo("#regress", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 12.3);
+      tl.from("#regress .chg.rm", { opacity: 0, y: 10, duration: 0.3 }, 12.6);
+      tl.from("#regress .chg.add", { opacity: 0, y: 10, duration: 0.3 }, 13.0);
+      tl.from("#newly", { opacity: 0, duration: 0.3 }, 13.4);
+      tl.to("#s3", { opacity: 0, duration: 0.28 }, 15.2);
+
+      // Scene 5 — guard
+      tl.fromTo("#s5", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 15.5);
+      tl.from("#pgCap", { opacity: 0, y: 14, duration: 0.4, ease: "power3.out" }, 15.55);
+      type("#urlText", 15.75, 0.016);
+      tl.to("#cursor", { opacity: 1, x: 1600, y: 600, duration: 0.01 }, 16.0);
+      tl.to("#cursor", { x: 1610, y: 545, duration: 0.35, ease: "power2.out" }, 16.02);
+      tl.to("#caret", { opacity: 0, duration: 0.01 }, 16.4);
+      tl.to("#sendBtn", { scale: 0.95, duration: 0.08 }, 16.42).to("#sendBtn", { scale: 1, duration: 0.15 }, 16.5);
+      tl.fromTo("#blocked", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 16.52); // beat-grid: 16.52s
+      tl.to("#cursor", { opacity: 0, duration: 0.25 }, 16.9);
+      tl.to("#s5", { opacity: 0, duration: 0.28 }, 18.5);
+
+      // Scene 6 — outro
+      tl.fromTo("#s6", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 18.78);
+      tl.fromTo("#m6", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 18.85);
+      tl.fromTo("#t6", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 19.15);
+      // Music-driven glow: rises into the 20.02s strong cue, then breathes on the beat grid.
+      tl.to("#glow", { opacity: 0.6, duration: 1.0, ease: "sine.inOut" }, 18.95);
+      tl.to("#glow", { opacity: 1, scale: 1.06, duration: 0.12 }, 20.0); // beat-locked: 20.02s
+      [20.52, 21.02].forEach((b) => tl.to("#glow", { opacity: 0.75, scale: 1, duration: 0.34, ease: "sine.out" }, b - 0.38).to("#glow", { opacity: 0.95, duration: 0.1 }, b));
+      tl.fromTo("#m6 svg", { rotation: 0 }, { rotation: 90, duration: 0.6, ease: "power3.inOut" }, 19.6);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

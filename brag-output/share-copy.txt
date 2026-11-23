@@ -1,0 +1,1 @@
+Introducing TraceNest: find API problems before your users do. Save a request, add assertions, and when the response quietly changes it tells you which field moved and which checks just broke — with an SSRF-guarded executor underneath. Built with React, Express and MongoDB.
